@@ -1,0 +1,23 @@
+<source>
+  @type kafka
+  brokers kafka-source-cluster:9092
+  topics my-topic
+  format json
+  consumer_threads 3
+</source>
+
+<match my-topic>
+  @type kafka_buffered
+  brokers kafka-destination-cluster:9092
+  buffer_type memory
+  flush_interval 10s
+  max_retry 5
+  retry_backoff 2s
+  max_send_retries 2
+  send_retry_max_wait 60s
+  compression_codec snappy
+  compression_threshold 65536
+  required_acks -1
+  topic_key fluentd_topic
+  output_data_type json
+</match>
