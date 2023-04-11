@@ -1,0 +1,21 @@
+<source>
+  @type kafka
+  brokers kafka-broker1:9092,kafka-broker2:9092
+  topics my-topic
+  format json
+  <consumer>
+    group_id my-group
+    <max_poll_records>1000</max_poll_records>
+  </consumer>
+</source>
+
+<match my-topic>
+  @type kafka_buffered
+  brokers kafka-broker1:9092,kafka-broker2:9092
+  default_topic my-topic
+  output_data_type json
+  <producer>
+    required_acks -1
+    compression_codec gzip
+  </producer>
+</match>
