@@ -1,0 +1,19 @@
+PUT _index_template/log_hospital_hospitalname_departmentname_pilinename
+{
+  "index_patterns": ["log_hospital_hospitalname_departmentname_pilinename*"],
+  "template": {
+   "settings": {
+    "number_of_shards": 2,
+    "number_of_replicas": 1,
+    "plugins.index_state_management.rollover_alias": "log_hospital_hospitalname_departmentname_pilinename"
+   },
+   "mappings": {
+      "properties": {
+        "timestamp": {
+          "type": "date",
+          "format": "yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis"
+        }
+      }
+ }
+  }
+}
