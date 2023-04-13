@@ -1,3 +1,5 @@
+strict_date_time||strict_date_optional_time||epoch_millis||strict_date_optional_time_nanos
+
 PUT _index_template/log_hospital_hospitalname_departmentname_pilinename
 {
   "index_patterns": ["log_hospital_hospitalname_departmentname_pilinename*"],
