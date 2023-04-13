@@ -1,0 +1,51 @@
+from kafka import KafkaProducer
+import json
+import time
+import logging
+import ssl
+
+# Configuration Kafka
+kafka_bootstrap_servers = 'localhost:9092'
+kafka_topic = 'test_topic'
+kafka_cafile = 'ca.crt'
+kafka_certfile = 'client.crt'
+kafka_keyfile = 'client.key'
+kafka_ssl_context = ssl.create_default_context(cafile=kafka_cafile)
+kafka_ssl_context.load_cert_chain(certfile=kafka_certfile, keyfile=kafka_keyfile)
+
+# Configuration logging
+logging.basicConfig(filename='kafka_logs.log', level=logging.INFO, format='%(asctime)s %(levelname)s: %(message)s')
+
+# Fonction pour écrire le JSON dans Kafka
+def write_to_kafka(producer, data):
+    producer.send(kafka_topic, json.dumps(data).encode('utf-8'))
+    producer.flush()
+
+# Fonction pour écrire les logs
+def write_logs(status, message):
+    if status == 'success':
+        logging.info(message)
+    elif status == 'failure':
+        logging.error(message)
+
+# Boucle principale
+if __name__ == '__main__':
+    producer = KafkaProducer(bootstrap_servers=kafka_bootstrap_servers,
+                             security_protocol='SSL',
+                             ssl_context=kafka_ssl_context)
+    while True:
+        try:
+            # Générer le JSON à envoyer à Kafka
+            data = {'timestamp': time.time(), 'message': 'Hello, world!'}
+            
+            # Envoyer le JSON à Kafka
+            write_to_kafka(producer, data)
+            
+            # Écrire les logs
+            write_logs('success', f'Successfully sent JSON: {data}')
+        except Exception as e:
+            # Écrire les logs
+            write_logs('failure', f'Error sending JSON: {e}')
+            
+        # Attendre une minute avant la prochaine itération
+        time.sleep(60)
