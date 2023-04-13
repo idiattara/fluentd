@@ -1,3 +1,4 @@
 from datetime import datetime, timezone
 import time
 data = {'timestamp': datetime.now(timezone.utc).isoformat(), 'message': 'Hello, world!'}
+datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ")
