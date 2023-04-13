@@ -1,0 +1,3 @@
+from datetime import datetime, timezone
+import time
+data = {'timestamp': datetime.now(timezone.utc).isoformat(), 'message': 'Hello, world!'}
