@@ -1,0 +1,18 @@
+import requests
+from datetime import datetime
+now = datetime.now()
+index_name = "diallo01"  
+document_to_index = {
+"location" : "14.76, -14.76" ,
+"typeproduit" : "COCA" ,
+"prix" : 1500,
+"agent_timestamp":now.strftime("%Y-%m-%dT%H:%M:%S")
+}
+headers = { 'Content-Type' : 'application/json' }
+username="elastic"
+password="somethingsecret"
+auth=(username,password)
+response = requests.post( url="http://hostname:port/"+ index_name + "/_doc" , json=document_to_index , headers =headers,auth=auth)
+response.raise_for_status()  
+print(response.status_code)  
+print(response.text)
