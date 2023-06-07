@@ -1,0 +1,19 @@
+{
+  "size": 0,
+  "aggs": {
+    "duplicate_timestamps": {
+      "terms": {
+        "field": "timestamp.keyword",
+        "min_doc_count": 2,  // Only consider values that occur at least twice
+        "size": 10           // Set the desired number of duplicates to retrieve
+      },
+      "aggs": {
+        "docs": {
+          "top_hits": {
+            "size": 10       // Set the desired number of documents to retrieve per duplicate
+          }
+        }
+      }
+    }
+  }
+}
