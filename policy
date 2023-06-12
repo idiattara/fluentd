@@ -1,0 +1,23 @@
+import requests
+
+# Set the Ranger admin URL and credentials
+ranger_admin_url = "http://your-ranger-admin-url:6080"
+username = "your-username"
+password = "your-password"
+
+# Set the policy name to be deleted
+policy_name = "kafka"
+
+# Create a session and authenticate
+session = requests.session()
+session.auth = (username, password)
+
+# Delete the policy
+delete_url = f"{ranger_admin_url}/service/public/v2/api/policy?policyName={policy_name}"
+response = session.delete(delete_url)
+
+# Check the response status code
+if response.status_code == 200:
+    print(f"Policy '{policy_name}' deleted successfully.")
+else:
+    print("Failed to delete the policy.")
