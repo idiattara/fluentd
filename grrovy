@@ -1,0 +1,58 @@
+import org.apache.nifi.processor.io.StreamCallback
+import org.apache.nifi.stream.io.StreamUtils
+import org.elasticsearch.action.bulk.BulkRequest
+import org.elasticsearch.action.bulk.BulkResponse
+import org.elasticsearch.action.index.IndexRequest
+import org.elasticsearch.client.RestClient
+import org.elasticsearch.client.RestHighLevelClient
+import org.elasticsearch.common.xcontent.XContentType
+
+// Configuration Elasticsearch
+def elasticsearchHost = 'your_elasticsearch_host'
+def elasticsearchPort = 9200
+def elasticsearchUsername = 'your_username'
+def elasticsearchPassword = 'your_password'
+
+// Obtenir le contenu du flux d'entrée
+def flowFile = session.get()
+if (!flowFile) return
+
+def elasticsearchClient = new RestHighLevelClient(
+    RestClient.builder(
+        new org.apache.http.client.HttpHost(elasticsearchHost, elasticsearchPort)
+    )
+)
+
+// Traitement du contenu du flux
+flowFile = session.write(flowFile, { inputStream, outputStream ->
+    def bulkRequest = new BulkRequest()
+    
+    // Lire le contenu du flux d'entrée
+    def content = inputStream.text
+    
+    // Créer une opération d'index
+    def indexRequest = new IndexRequest("your_index_name")
+        .source(content, XContentType.JSON)
+    
+    bulkRequest.add(indexRequest)
+    
+    // Exécuter la requête bulk
+    def bulkResponse = elasticsearchClient.bulk(bulkRequest)
+    
+    // Gérer la réponse Elasticsearch (vous pouvez ajouter plus de logique ici)
+    if (bulkResponse.hasFailures()) {
+        // Gérer les erreurs
+        logger.error("Erreur lors de l'indexation dans Elasticsearch: ${bulkResponse.buildFailureMessage()}")
+    } else {
+        logger.info("Indexation réussie dans Elasticsearch")
+    }
+    
+    // Écrire la réponse Elasticsearch dans le flux de sortie si nécessaire
+    outputStream.write(bulkResponse.toString().getBytes("UTF-8"))
+} as StreamCallback)
+
+// Fermer le client Elasticsearch
+elasticsearchClient.close()
+
+// Transférer le flux vers la relation de succès
+session.transfer(flowFile, REL_SUCCESS)
