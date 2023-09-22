@@ -1,58 +1,120 @@
 import org.apache.nifi.processor.io.StreamCallback
-import org.apache.nifi.stream.io.StreamUtils
-import org.elasticsearch.action.bulk.BulkRequest
-import org.elasticsearch.action.bulk.BulkResponse
+import org.apache.nifi.processors.script.ExecuteScript
+import org.apache.nifi.flowfile.FlowFile
+import org.apache.nifi.processor.AbstractProcessor
+import org.apache.nifi.annotation.lifecycle.OnScheduled
+import org.apache.nifi.annotation.behavior.InputRequirement
+import org.apache.nifi.annotation.documentation.CapabilityDescription
+import org.apache.nifi.annotation.documentation.Tags
+import org.apache.nifi.annotation.lifecycle.OnUnscheduled
+import org.apache.nifi.components.PropertyDescriptor
+import org.apache.nifi.flowfile.attributes.CoreAttributes
+import org.apache.nifi.annotation.behavior.WritesAttribute
+
 import org.elasticsearch.action.index.IndexRequest
+import org.elasticsearch.action.index.IndexResponse
+import org.elasticsearch.client.RequestOptions
 import org.elasticsearch.client.RestClient
-import org.elasticsearch.client.RestHighLevelClient
 import org.elasticsearch.common.xcontent.XContentType
 
-// Configuration Elasticsearch
-def elasticsearchHost = 'your_elasticsearch_host'
-def elasticsearchPort = 9200
-def elasticsearchUsername = 'your_username'
-def elasticsearchPassword = 'your_password'
+@Tags(["script", "groovy", "elasticsearch"])
+@InputRequirement(InputRequirement.Requirement.INPUT_REQUIRED)
+@CapabilityDescription("A Groovy script that writes data from a FlowFile to Elasticsearch.")
+@WritesAttribute(attribute = "elasticsearch.write.status", description = "The status of the Elasticsearch write operation.")
 
-// Obtenir le contenu du flux d'entrée
-def flowFile = session.get()
-if (!flowFile) return
+class GroovyElasticsearchWriterScript extends AbstractProcessor {
 
-def elasticsearchClient = new RestHighLevelClient(
-    RestClient.builder(
-        new org.apache.http.client.HttpHost(elasticsearchHost, elasticsearchPort)
-    )
-)
+    private List<PropertyDescriptor> properties = []
 
-// Traitement du contenu du flux
-flowFile = session.write(flowFile, { inputStream, outputStream ->
-    def bulkRequest = new BulkRequest()
-    
-    // Lire le contenu du flux d'entrée
-    def content = inputStream.text
-    
-    // Créer une opération d'index
-    def indexRequest = new IndexRequest("your_index_name")
-        .source(content, XContentType.JSON)
-    
-    bulkRequest.add(indexRequest)
-    
-    // Exécuter la requête bulk
-    def bulkResponse = elasticsearchClient.bulk(bulkRequest)
-    
-    // Gérer la réponse Elasticsearch (vous pouvez ajouter plus de logique ici)
-    if (bulkResponse.hasFailures()) {
-        // Gérer les erreurs
-        logger.error("Erreur lors de l'indexation dans Elasticsearch: ${bulkResponse.buildFailureMessage()}")
-    } else {
-        logger.info("Indexation réussie dans Elasticsearch")
+    @OnScheduled
+    def onScheduled(ProcessContext context) {
+        // Configure properties
+        properties = [
+            new PropertyDescriptor.Builder()
+                    .name("Elasticsearch URL")
+                    .description("Elasticsearch URL, e.g., http://localhost:9200")
+                    .required(true)
+                    .expressionLanguageSupported(true)
+                    .addValidator(createAttributeExpressionLanguageValidator(AttributeExpression.ResultType.STRING))
+                    .build(),
+            new PropertyDescriptor.Builder()
+                    .name("Index")
+                    .description("The Elasticsearch index to write to")
+                    .required(true)
+                    .expressionLanguageSupported(true)
+                    .addValidator(createAttributeExpressionLanguageValidator(AttributeExpression.ResultType.STRING))
+                    .build(),
+            new PropertyDescriptor.Builder()
+                    .name("Type")
+                    .description("The document type (deprecated in recent Elasticsearch versions; can usually be '_doc')")
+                    .required(true)
+                    .expressionLanguageSupported(true)
+                    .addValidator(createAttributeExpressionLanguageValidator(AttributeExpression.ResultType.STRING))
+                    .build()
+        ]
     }
-    
-    // Écrire la réponse Elasticsearch dans le flux de sortie si nécessaire
-    outputStream.write(bulkResponse.toString().getBytes("UTF-8"))
-} as StreamCallback)
 
-// Fermer le client Elasticsearch
-elasticsearchClient.close()
+    @OnUnscheduled
+    def onUnscheduled(ProcessContext context) {
+        // Reset properties when unscheduled
+        properties = []
+    }
 
-// Transférer le flux vers la relation de succès
-session.transfer(flowFile, REL_SUCCESS)
+    @Override
+    List<PropertyDescriptor> getSupportedPropertyDescriptors() {
+        return properties
+    }
+
+    @Override
+    void onTrigger(ProcessContext context, ProcessSession session) {
+        // Get the input FlowFile
+        def flowFile = session.get()
+        if (!flowFile) {
+            return
+        }
+
+        // Retrieve the configured properties
+        def elasticsearchUrl = context.getProperty("Elasticsearch URL").evaluateAttributeExpressions(flowFile).getValue()
+        def index = context.getProperty("Index").evaluateAttributeExpressions(flowFile).getValue()
+        def type = context.getProperty("Type").evaluateAttributeExpressions(flowFile).getValue()
+
+        // Create a task for processing
+        session.read(flowFile, { inputStream ->
+            // Create an Elasticsearch client
+            def client = RestClient.builder(new HttpHost(elasticsearchUrl)).build()
+
+            // Read the content of the FlowFile
+            def content = IOUtils.toString(inputStream, StandardCharsets.UTF_8)
+
+            // Create an Elasticsearch index request
+            def indexRequest = new IndexRequest(index, type)
+                    .source(content, XContentType.JSON)
+
+            try {
+                // Send the index request to Elasticsearch
+                def response = client.index(indexRequest, RequestOptions.DEFAULT)
+
+                // Handle the Elasticsearch response
+                if (response.status() == RestStatus.CREATED) {
+                    // Success: Transfer to success relationship
+                    session.transfer(flowFile, ExecuteScript.REL_SUCCESS)
+                } else {
+                    // Failure: Transfer to failure relationship
+                    session.transfer(flowFile, ExecuteScript.REL_FAILURE)
+                }
+
+                // Set an attribute indicating the Elasticsearch write status
+                flowFile = session.putAttribute(flowFile, "elasticsearch.write.status", response.status().name())
+            } catch (Exception e) {
+                // Exception occurred: Transfer to failure relationship
+                session.transfer(flowFile, ExecuteScript.REL_FAILURE)
+            } finally {
+                // Close the Elasticsearch client
+                client.close()
+            }
+        } as StreamCallback)
+
+        // Commit the session
+        session.commit()
+    }
+}
