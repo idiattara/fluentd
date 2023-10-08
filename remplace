@@ -1,0 +1,1 @@
+ ${composite_value:replaceAll('(%Meta_[^|]*)', '${METADATA:$1}')}
