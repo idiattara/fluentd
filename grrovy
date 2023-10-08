@@ -1,30 +1,22 @@
 import groovy.json.JsonSlurper
 
-try {
-    // Récupérer la valeur de l'attribut
-    def attributeValue = flowFile.getAttribute('votre_attribut_json') // Remplacez 'votre_attribut_json' par le nom de votre attribut
+// Récupérer la valeur de l'attribut
+def attributeValue = flowFile.getAttribute('votre_attribut_json') // Remplacez 'votre_attribut_json' par le nom de votre attribut
 
-    // Analyser le JSON
-    def jsonSlurper = new JsonSlurper()
-    def parsedJson = jsonSlurper.parseText(attributeValue)
+// Analyser le JSON
+def jsonSlurper = new JsonSlurper()
+def parsedJson = jsonSlurper.parseText(attributeValue)
 
-    // Parcourir les éléments du tableau JSON
-    parsedJson.each { item ->
-        if (item.name == 'id') { // Vérifier si le nom est 'id'
-            // Extraire la valeur 'composite' lorsque 'name' est 'id'
-            def compositeValue = item.composite.toString()
+// Parcourir les éléments du tableau JSON
+parsedJson.each { item ->
+    if (item.name == 'id') { // Vérifier si le nom est 'id'
+        // Extraire la valeur 'composite' lorsque 'name' est 'id'
+        def compositeValue = item.composite.toString()
 
-            // Mettre la valeur 'composite' dans un nouvel attribut
-            flowFile = session.putAttribute(flowFile, 'composite_id', compositeValue)
-        }
+        // Mettre la valeur 'composite' dans un nouvel attribut
+        flowFile = session.putAttribute(flowFile, 'composite_id', compositeValue)
     }
-
-    // Transférer le flow file vers la relation de succès
-    session.transfer(flowFile, REL_SUCCESS)
-} catch (Exception e) {
-    // Gérer l'exception ici, par exemple, la journaliser
-    getLogger().error("Erreur lors du traitement JSON : ${e.toString()}")
-
-    // Transférer le flow file vers la relation d'échec en cas d'erreur
-    session.transfer(flowFile, REL_FAILURE)
 }
+
+// Transférer le flow file vers la relation de succès
+session.transfer(flowFile, REL_SUCCESS)
