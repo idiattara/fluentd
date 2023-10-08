@@ -1,0 +1,31 @@
+import groovy.json.JsonSlurper
+
+try {
+    // Récupérez la valeur de l'attribut A
+    def attributeA = flowFile.getAttribute('A')
+
+    // Récupérez la valeur de l'attribut B
+    def attributeB = flowFile.getAttribute('B')
+
+    // Parsez la valeur JSON de l'attribut B
+    def jsonSlurper = new groovy.json.JsonSlurper()
+    def parsedAttributeB = jsonSlurper.parseText(attributeB)
+
+    // Parcourez les clés et valeurs de l'objet JSON de l'attribut B
+    parsedAttributeB.each { key, value ->
+        // Remplacez les occurrences de la clé par la valeur correspondante dans l'attribut A
+        attributeA = attributeA.replaceAll(key, value)
+    }
+
+    // Mettez à jour l'attribut A avec la nouvelle valeur
+    flowFile = session.putAttribute(flowFile, 'A', attributeA)
+
+    // Transférez le flow file vers la relation de succès
+    session.transfer(flowFile, REL_SUCCESS)
+} catch (Exception e) {
+    // Gérez l'exception ici, par exemple, journalisez-la
+    getLogger().error("Erreur lors du traitement : ${e.toString()}")
+
+    // Transférez le flow file vers la relation d'échec en cas d'erreur
+    session.transfer(flowFile, REL_FAILURE)
+}
