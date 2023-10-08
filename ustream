@@ -1,0 +1,30 @@
+import groovy.json.JsonSlurper
+
+def flowFile = session.get()
+if (!flowFile) return
+
+try {
+    flowFile.eachInputStream { streamName, inputStream ->
+        // Lire le contenu du flux d'entrée
+        def jsonText = inputStream.text
+
+        // Parser le contenu JSON
+        def jsonSlurper = new JsonSlurper()
+        def parsedJson = jsonSlurper.parseText(jsonText)
+
+        // Parcourir les clés et valeurs du JSON
+        parsedJson.each { key, value ->
+            // Stocker chaque valeur dans un attribut du FlowFile actuel (attribut A)
+            flowFile = session.putAttribute(flowFile, key, value.toString())
+        }
+    }
+
+    // Transférer le FlowFile vers la relation de succès
+    session.transfer(flowFile, REL_SUCCESS)
+} catch (Exception e) {
+    // Gérer l'exception ici, par exemple, la journaliser
+    getLogger().error("Erreur lors du traitement : ${e.toString()}")
+
+    // Transférer le FlowFile vers la relation d'échec en cas d'erreur
+    session.transfer(flowFile, REL_FAILURE)
+}
