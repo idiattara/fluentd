@@ -1,0 +1,31 @@
+import org.apache.commons.io.IOUtils
+import java.nio.charset.StandardCharsets
+
+// Initialisation de la variable d'exception
+def exceptionMessage = null
+
+// Accéder au flow file
+def flowFile = session.get()
+if (!flowFile) return
+
+try {
+    // Lire le contenu du flow file
+    def content = IOUtils.toString(flowFile.read(), StandardCharsets.UTF_8)
+
+    // Mettre le contenu dans un attribut (vous pouvez changer "monAttribut" au nom souhaité)
+    flowFile = session.putAttribute(flowFile, 'monAttribut', content)
+    
+    // Transférer le flow file au prochain processeur
+    session.transfer(flowFile, REL_SUCCESS)
+} catch (Exception e) {
+    // Capturer l'exception et stocker le message dans une variable
+    exceptionMessage = e.getMessage()
+    
+    // Vous pouvez également enregistrer l'exception dans les logs
+    log.error("Erreur lors du traitement du flow file : $exceptionMessage")
+    
+    // Transférer le flow file vers une relation d'échec (vous devez créer cette relation dans la configuration du processeur)
+    session.transfer(flowFile, REL_FAILURE)
+}
+
+// Si une exception s'est produite, vous pouvez également ajouter du code ici pour gérer l'exception de manière spécifique
