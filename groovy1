@@ -1,0 +1,13 @@
+flowFile = session.get()
+if (flowFile) {
+    try {
+        InputStream flowFileInputStream = session.read(flowFile)
+        text = flowFileInputStream.text
+        flowFile = session.putAttribute(flowFile, 'large_content', text)
+        session.transfer(flowFile, REL_SUCCESS)
+    } catch (Exception e) {
+        // Handle the exception here, for example, log it
+        getLogger().error("Error processing flow file: ${e.toString()}")
+        session.transfer(flowFile, REL_FAILURE) // Optionally, you can route the flow file to a failure relationship
+    }
+}
