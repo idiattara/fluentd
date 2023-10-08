@@ -1,0 +1,7 @@
+def inputStream = session.read(flowFile)
+    def jsonText = inputStream.text
+    inputStream.close()
+
+    // Parser le contenu JSON de FlowFile B
+    def jsonSlurper = new JsonSlurper()
+    def parsedJson = jsonSlurper.parseText(jsonText)
