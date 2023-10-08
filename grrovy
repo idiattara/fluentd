@@ -1,32 +1,30 @@
 import groovy.json.JsonSlurper
 
-flowFile = session.get()
-if (flowFile) {
-    try {
-        // Lire la valeur de l'attribut "votre_attribut" (remplacez par le nom de votre attribut)
-        jsonAttribute = flowFile.getAttribute('votre_attribut')
+try {
+    // Récupérer la valeur de l'attribut
+    def attributeValue = flowFile.getAttribute('votre_attribut_json') // Remplacez 'votre_attribut_json' par le nom de votre attribut
 
-        // Utiliser JsonSlurper pour analyser l'attribut JSON
-        def jsonSlurper = new JsonSlurper()
-        def jsonObject = jsonSlurper.parseText(jsonAttribute)
+    // Analyser le JSON
+    def jsonSlurper = new JsonSlurper()
+    def parsedJson = jsonSlurper.parseText(attributeValue)
 
-        // Vérifier si l'objet JSON contient une entrée "nom" égale à "diattar"
-        if (jsonObject.nom == "diattar") {
-            // Extraire la valeur de "composit" si "nom" est égal à "diattar"
-            def compositValue = jsonObject.composit.toString()
-            
-            // Mettre la valeur de "composit" dans un nouvel attribut
-            flowFile = session.putAttribute(flowFile, 'composit_diattar', compositValue)
-            
-            // Transférer le flow file avec le nouvel attribut
-            session.transfer(flowFile, REL_SUCCESS)
-        } else {
-            // Si "nom" n'est pas égal à "diattar", transférer le flow file sans modification
-            session.transfer(flowFile, REL_SUCCESS)
+    // Parcourir les éléments du tableau JSON
+    parsedJson.each { item ->
+        if (item.name == 'id') { // Vérifier si le nom est 'id'
+            // Extraire la valeur 'composite' lorsque 'name' est 'id'
+            def compositeValue = item.composite.toString()
+
+            // Mettre la valeur 'composite' dans un nouvel attribut
+            flowFile = session.putAttribute(flowFile, 'composite_id', compositeValue)
         }
-    } catch (Exception e) {
-        // Gérer l'exception ici, par exemple, la journaliser
-        getLogger().error("Erreur lors du traitement du flow file : ${e.toString()}")
-        session.transfer(flowFile, REL_FAILURE) // Facultatif : Vous pouvez également le transférer vers une relation d'échec
     }
+
+    // Transférer le flow file vers la relation de succès
+    session.transfer(flowFile, REL_SUCCESS)
+} catch (Exception e) {
+    // Gérer l'exception ici, par exemple, la journaliser
+    getLogger().error("Erreur lors du traitement JSON : ${e.toString()}")
+
+    // Transférer le flow file vers la relation d'échec en cas d'erreur
+    session.transfer(flowFile, REL_FAILURE)
 }
