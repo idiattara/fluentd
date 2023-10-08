@@ -1,120 +1,32 @@
-import org.apache.nifi.processor.io.StreamCallback
-import org.apache.nifi.processors.script.ExecuteScript
-import org.apache.nifi.flowfile.FlowFile
-import org.apache.nifi.processor.AbstractProcessor
-import org.apache.nifi.annotation.lifecycle.OnScheduled
-import org.apache.nifi.annotation.behavior.InputRequirement
-import org.apache.nifi.annotation.documentation.CapabilityDescription
-import org.apache.nifi.annotation.documentation.Tags
-import org.apache.nifi.annotation.lifecycle.OnUnscheduled
-import org.apache.nifi.components.PropertyDescriptor
-import org.apache.nifi.flowfile.attributes.CoreAttributes
-import org.apache.nifi.annotation.behavior.WritesAttribute
+import groovy.json.JsonSlurper
 
-import org.elasticsearch.action.index.IndexRequest
-import org.elasticsearch.action.index.IndexResponse
-import org.elasticsearch.client.RequestOptions
-import org.elasticsearch.client.RestClient
-import org.elasticsearch.common.xcontent.XContentType
+flowFile = session.get()
+if (flowFile) {
+    try {
+        // Lire la valeur de l'attribut "votre_attribut" (remplacez par le nom de votre attribut)
+        jsonAttribute = flowFile.getAttribute('votre_attribut')
 
-@Tags(["script", "groovy", "elasticsearch"])
-@InputRequirement(InputRequirement.Requirement.INPUT_REQUIRED)
-@CapabilityDescription("A Groovy script that writes data from a FlowFile to Elasticsearch.")
-@WritesAttribute(attribute = "elasticsearch.write.status", description = "The status of the Elasticsearch write operation.")
+        // Utiliser JsonSlurper pour analyser l'attribut JSON
+        def jsonSlurper = new JsonSlurper()
+        def jsonObject = jsonSlurper.parseText(jsonAttribute)
 
-class GroovyElasticsearchWriterScript extends AbstractProcessor {
-
-    private List<PropertyDescriptor> properties = []
-
-    @OnScheduled
-    def onScheduled(ProcessContext context) {
-        // Configure properties
-        properties = [
-            new PropertyDescriptor.Builder()
-                    .name("Elasticsearch URL")
-                    .description("Elasticsearch URL, e.g., http://localhost:9200")
-                    .required(true)
-                    .expressionLanguageSupported(true)
-                    .addValidator(createAttributeExpressionLanguageValidator(AttributeExpression.ResultType.STRING))
-                    .build(),
-            new PropertyDescriptor.Builder()
-                    .name("Index")
-                    .description("The Elasticsearch index to write to")
-                    .required(true)
-                    .expressionLanguageSupported(true)
-                    .addValidator(createAttributeExpressionLanguageValidator(AttributeExpression.ResultType.STRING))
-                    .build(),
-            new PropertyDescriptor.Builder()
-                    .name("Type")
-                    .description("The document type (deprecated in recent Elasticsearch versions; can usually be '_doc')")
-                    .required(true)
-                    .expressionLanguageSupported(true)
-                    .addValidator(createAttributeExpressionLanguageValidator(AttributeExpression.ResultType.STRING))
-                    .build()
-        ]
-    }
-
-    @OnUnscheduled
-    def onUnscheduled(ProcessContext context) {
-        // Reset properties when unscheduled
-        properties = []
-    }
-
-    @Override
-    List<PropertyDescriptor> getSupportedPropertyDescriptors() {
-        return properties
-    }
-
-    @Override
-    void onTrigger(ProcessContext context, ProcessSession session) {
-        // Get the input FlowFile
-        def flowFile = session.get()
-        if (!flowFile) {
-            return
+        // Vérifier si l'objet JSON contient une entrée "nom" égale à "diattar"
+        if (jsonObject.nom == "diattar") {
+            // Extraire la valeur de "composit" si "nom" est égal à "diattar"
+            def compositValue = jsonObject.composit.toString()
+            
+            // Mettre la valeur de "composit" dans un nouvel attribut
+            flowFile = session.putAttribute(flowFile, 'composit_diattar', compositValue)
+            
+            // Transférer le flow file avec le nouvel attribut
+            session.transfer(flowFile, REL_SUCCESS)
+        } else {
+            // Si "nom" n'est pas égal à "diattar", transférer le flow file sans modification
+            session.transfer(flowFile, REL_SUCCESS)
         }
-
-        // Retrieve the configured properties
-        def elasticsearchUrl = context.getProperty("Elasticsearch URL").evaluateAttributeExpressions(flowFile).getValue()
-        def index = context.getProperty("Index").evaluateAttributeExpressions(flowFile).getValue()
-        def type = context.getProperty("Type").evaluateAttributeExpressions(flowFile).getValue()
-
-        // Create a task for processing
-        session.read(flowFile, { inputStream ->
-            // Create an Elasticsearch client
-            def client = RestClient.builder(new HttpHost(elasticsearchUrl)).build()
-
-            // Read the content of the FlowFile
-            def content = IOUtils.toString(inputStream, StandardCharsets.UTF_8)
-
-            // Create an Elasticsearch index request
-            def indexRequest = new IndexRequest(index, type)
-                    .source(content, XContentType.JSON)
-
-            try {
-                // Send the index request to Elasticsearch
-                def response = client.index(indexRequest, RequestOptions.DEFAULT)
-
-                // Handle the Elasticsearch response
-                if (response.status() == RestStatus.CREATED) {
-                    // Success: Transfer to success relationship
-                    session.transfer(flowFile, ExecuteScript.REL_SUCCESS)
-                } else {
-                    // Failure: Transfer to failure relationship
-                    session.transfer(flowFile, ExecuteScript.REL_FAILURE)
-                }
-
-                // Set an attribute indicating the Elasticsearch write status
-                flowFile = session.putAttribute(flowFile, "elasticsearch.write.status", response.status().name())
-            } catch (Exception e) {
-                // Exception occurred: Transfer to failure relationship
-                session.transfer(flowFile, ExecuteScript.REL_FAILURE)
-            } finally {
-                // Close the Elasticsearch client
-                client.close()
-            }
-        } as StreamCallback)
-
-        // Commit the session
-        session.commit()
+    } catch (Exception e) {
+        // Gérer l'exception ici, par exemple, la journaliser
+        getLogger().error("Erreur lors du traitement du flow file : ${e.toString()}")
+        session.transfer(flowFile, REL_FAILURE) // Facultatif : Vous pouvez également le transférer vers une relation d'échec
     }
 }
