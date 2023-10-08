@@ -1,1 +1,28 @@
-Expression régulière : .*"nom":"diattara", "id":"([^"]+)".
+import groovy.json.JsonSlurper
+
+def flowFile = session.get()
+if (!flowFile) return
+
+try {
+    // Récupérez le contenu de l'attribut contenant la liste d'objets JSON
+    def jsonAttribute = flowFile.getAttribute('votre_attribut_json') // Remplacez 'votre_attribut_json' par le nom de votre attribut
+
+    // Parsez la liste d'objets JSON
+    def jsonSlurper = new JsonSlurper()
+    def jsonList = jsonSlurper.parseText(jsonAttribute)
+
+    // Recherchez l'objet JSON avec le nom "diattara" et extrayez l'ID
+    def idDiattara = jsonList.find { it.nom == 'diattara' }?.id
+
+    // Stockez l'ID extrait dans un nouvel attribut
+    flowFile = session.putAttribute(flowFile, 'id_diattara', idDiattara as String)
+
+    // Transférez le FlowFile vers la relation de succès
+    session.transfer(flowFile, REL_SUCCESS)
+} catch (Exception e) {
+    // Gérez l'exception ici, par exemple, journalisez-la
+    getLogger().error("Erreur lors du traitement : ${e.toString()}")
+
+    // Transférez le FlowFile vers la relation d'échec en cas d'erreur
+    session.transfer(flowFile, REL_FAILURE)
+}
