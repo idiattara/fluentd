@@ -1,0 +1,43 @@
+import groovy.json.JsonBuilder
+import groovy.json.JsonOutput
+
+try {
+    // Récupérer la valeur de l'attribut
+    def attributeValue = flowFile.getAttribute('votre_attribut_json') // Remplacez 'votre_attribut_json' par le nom de votre attribut
+
+    // Analyser le JSON
+    def jsonSlurper = new JsonSlurper()
+    def parsedJson = jsonSlurper.parseText(attributeValue)
+
+    // Liste pour stocker les valeurs 'composite' non nulles sous forme de Map
+    def compositeValuesList = []
+
+    // Parcourir les éléments du tableau JSON
+    parsedJson.each { item ->
+        if (item.composite != null) { // Vérifier si 'composite' n'est pas nul
+            def compositeValue = item.composite.toString()
+            def nameValue = item.name.toString()
+            
+            // Créer une Map pour chaque valeur 'composite' non nulle
+            def compositeMap = [composite: compositeValue, name: nameValue]
+            
+            compositeValuesList.add(compositeMap)
+        }
+    }
+
+    // Si des valeurs 'composite' non nulles ont été trouvées, les formater en JSON et les stocker dans l'attribut
+    if (!compositeValuesList.isEmpty()) {
+        def compositeValuesJson = new JsonBuilder(compositeValuesList).toPrettyString()
+        flowFile = session.putAttribute(flowFile, 'composite_values', JsonOutput.prettyPrint(compositeValuesJson))
+        session.transfer(flowFile, REL_SUCCESS)
+    } else {
+        // Si aucune valeur 'composite' non nulle n'a été trouvée, transférer le flow file vers la relation d'échec
+        session.transfer(flowFile, REL_FAILURE)
+    }
+} catch (Exception e) {
+    // Gérer l'exception ici, par exemple, la journaliser
+    getLogger().error("Erreur lors du traitement JSON : ${e.toString()}")
+
+    // Transférer le flow file vers la relation d'échec en cas d'erreur
+    session.transfer(flowFile, REL_FAILURE)
+}
