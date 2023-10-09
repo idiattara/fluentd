@@ -1,9 +1,1 @@
-[
-  {
-    "operation": "shift",
-    "spec": {
-      "*": "&",
-      "*.*": "&"
-    }
-  }
-]
+if (value instanceof Map || value instanceof List)
