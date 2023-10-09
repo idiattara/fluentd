@@ -1,1 +1,9 @@
-if (value instanceof Map || value instanceof List)
+
+    // Lire le contenu du flowfile
+    def flowFileInputStream = session.read(flowFile)
+    def jsonContent = flowFileInputStream.text
+    flowFileInputStream.close()
+
+    // Parsez le contenu du flowfile en tant que JSON
+    def jsonSlurper = new groovy.json.JsonSlurper()
+    def parsedJsonContent = jsonSlurper.parseText(jsonContent)
