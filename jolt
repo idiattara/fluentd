@@ -1,16 +1,9 @@
-def resultList = []
-
-    // Parcourir les objets JSON et extraire les valeurs
-    jsonArray.each { jsonObj ->
+jsonArray.each { jsonObj ->
         if (jsonObj.containsKey("compo")) {
             def compoValue = jsonObj.compo
-            def matches = (compoValue =~ /%current_(.*?)\|/)
-
-            if (matches) {
-                matches.each { match ->
-                    // Ajouter la valeur correspondante à la liste
-                    resultList.add(match[1])
-                }
+            def match = (compoValue =~ /%current_([^|]*)/)
+            if (match) {
+                extractedFields.add(match[0][1])
             }
         }
-    
+    }
