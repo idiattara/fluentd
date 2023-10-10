@@ -1,0 +1,8 @@
+def nameList = []
+
+    // Parcourir les objets JSON et extraire les valeurs de la clé "name"
+    json.each { jsonObj ->
+        if (jsonObj.containsKey("name")) {
+            nameList.add(jsonObj.name)
+        }
+    }
