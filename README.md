@@ -19,8 +19,8 @@ Avant d'utiliser ce script, assurez-vous de remplir les prérequis suivants :
 Configuration
 - Le script nécessite une configuration minimale pour fonctionner correctement. Vous devez définir les éléments suivants dans le script :
 
--ranger_admin_url : L'URL de l'administration Ranger.
+*ranger_admin_url : L'URL de l'administration Ranger.
 
--username : Votre nom d'utilisateur Ranger.
+*username : Votre nom d'utilisateur Ranger.
 
--password : Votre mot de passe Ranger
+*password : Votre mot de passe Ranger
