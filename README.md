@@ -1,5 +1,3 @@
-# fluentd
-
 # Suppression de Politiques Ranger pour Kafka
 
 Ce script Python est conçu pour supprimer les politiques Ranger associées à des sujets Kafka spécifiques. Il utilise l'API Ranger pour effectuer ces suppressions. Les politiques Ranger sont utilisées pour gérer l'accès aux ressources, et ce script vous permet de nettoyer ces politiques en supprimant celles qui ne sont plus nécessaires.
