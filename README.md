@@ -14,9 +14,13 @@ Avant d'utiliser ce script, assurez-vous de remplir les prérequis suivants :
 
 - Apache Ranger : Vous devez avoir Apache Ranger configuré et fonctionnant. Le script utilise l'API Ranger pour effectuer les suppressions.
 
-## Installation
+## Configuration
 
-1. Clonez ce dépôt GitHub sur votre système local :
+Configuration
+- Le script nécessite une configuration minimale pour fonctionner correctement. Vous devez définir les éléments suivants dans le script :
 
-   ```bash
-   git clone https://github.com/votre-utilisateur/suppression-politiques-ranger-kafka.git
+###ranger_admin_url : L'URL de l'administration Ranger.
+
+###username : Votre nom d'utilisateur Ranger.
+
+###password : Votre mot de passe Ranger
