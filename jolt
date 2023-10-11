@@ -1,8 +1,34 @@
-[
-  {
-    "operation": "modify-overwrite-beta",
-    "spec": {
-      "": "= @(1,append(@(0:new_attribute)))"
-    }
-  }
-]
+import groovy.json.JsonSlurper
+import groovy.json.JsonOutput
+
+// Accédez à l'attribut JSON
+def jsonAttribute = flowFile.getAttribute('votre_attribut_json')
+
+// Accédez au contenu JSON du FlowFile
+def flowFileContent = IOUtils.toString(flowFile.read(), 'UTF-8')
+
+try {
+    // Parsez l'attribut JSON en un objet Groovy
+    def jsonAttributeObject = new JsonSlurper().parseText(jsonAttribute)
+
+    // Parsez le contenu JSON du FlowFile en un objet Groovy
+    def flowFileObject = new JsonSlurper().parseText(flowFileContent)
+
+    // Fusionnez les deux objets JSON
+    flowFileObject.putAll(jsonAttributeObject)
+
+    // Convertissez l'objet fusionné en une chaîne JSON
+    def mergedJsonString = JsonOutput.toJson(flowFileObject)
+
+    // Mettez à jour le contenu du FlowFile avec la nouvelle chaîne JSON fusionnée
+    flowFile = session.write(flowFile, { outputStream ->
+        outputStream.write(mergedJsonString.getBytes('UTF-8'))
+    } as OutputStreamCallback)
+
+    // Transférez le FlowFile au prochain processeur
+    session.transfer(flowFile, REL_SUCCESS)
+} catch (Exception e) {
+    // Gérez les exceptions en cas d'erreur
+    log.error("Erreur lors de la fusion de l'attribut JSON : ${e.message}")
+    session.transfer(flowFile, REL_FAILURE)
+}
