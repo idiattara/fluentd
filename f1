@@ -1,13 +1,32 @@
-# Kafka Consumer Group Cleanup Script
+# Kafka Producer Script
 
-Ce script Python permet de nettoyer les groupes de consommateurs Kafka à l'aide de l'API Kafka Admin. Il supprime les groupes de consommateurs spécifiés dans un fichier d'entrée.
+Ce script Python est un exemple de producteur Kafka qui envoie des messages JSON à un topic Kafka. Il utilise la bibliothèque Kafka Python.
 
-## Prérequis
+## Configuration Kafka
 
-- Python : Le script est écrit en Python. Assurez-vous d'avoir Python installé sur votre système.
+Avant d'exécuter ce script, assurez-vous de configurer correctement les paramètres Kafka suivants dans le script :
 
-- Fichier d'entrée : Vous devez fournir un fichier d'entrée contenant la liste des groupes de consommateurs Kafka à supprimer. Le script lira ces groupes depuis le fichier.
+- `kafka_bootstrap_servers` : Les adresses des brokers Kafka.
 
-- Cluster Kafka : Vous devez avoir un cluster Kafka opérationnel pour que le script fonctionne correctement.
+- `kafka_topic` : Le nom du topic Kafka sur lequel vous souhaitez envoyer des messages.
 
-- Kafka Admin : Le script utilise l'API Kafka Admin pour supprimer les groupes de consommateurs. Assurez-vous que l'accès à l'API Admin est configuré et fonctionne correctement.
+- `kafka_cafile`, `kafka_certfile`, `kafka_keyfile` : Les chemins vers les fichiers de certificats SSL pour la communication sécurisée avec le cluster Kafka.
+
+- `kafka_acks` : La politique d'attente d'accusé de réception (acks) pour la confirmation de la réception du message par le broker. La valeur -1 signifie "all" (attente d'une confirmation de tous les brokers).
+
+## Fonctionnalités
+
+- Le script envoie périodiquement des messages JSON au topic Kafka spécifié.
+
+- Les messages JSON contiennent un horodatage, un message "Hello, world!" et un compteur.
+
+- Les logs sont enregistrés dans le fichier `kafka_logs.log`.
+
+## Utilisation
+
+1. Assurez-vous d'avoir correctement configuré les paramètres Kafka dans le script.
+
+2. Exécutez le script Python :
+
+   ```bash
+   python kafka_producer.py
