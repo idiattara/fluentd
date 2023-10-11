@@ -24,3 +24,6 @@ Configuration
 *username : Votre nom d'utilisateur Ranger.
 
 *password : Votre mot de passe Ranger
+
+## Utilisation
+python suppression_politiques.py topic_todelete.txt
