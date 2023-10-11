@@ -1,9 +1,31 @@
-jsonArray.each { jsonObj ->
-        if (jsonObj.containsKey("compo")) {
-            def compoValue = jsonObj.compo
-            def match = (compoValue =~ /%current_([^|]*)/)
-            if (match) {
-                extractedFields.add(match[0][1])
-            }
-        }
+import groovy.json.JsonBuilder
+
+// Accéder à l'attribut JSON
+def jsonAttribute = flowFile.getAttribute('votre_attribut_json')
+
+try {
+    // Convertir l'attribut JSON en une liste d'objets JSON
+    def jsonList = new JsonSlurper().parseText(jsonAttribute)
+
+    // Créer un nouveau JSON avec le format souhaité
+    def newJson = [:]
+    
+    jsonList.each { jsonObj ->
+        def name = jsonObj.name
+        def compo = jsonObj.compo
+        newJson[name] = compo
     }
+    
+    // Convertir le nouveau JSON en une chaîne JSON
+    def newJsonString = new JsonBuilder(newJson).toPrettyString()
+
+    // Vous pouvez maintenant utiliser newJsonString comme attribut ou le placer où vous en avez besoin
+    flowFile = session.putAttribute(flowFile, 'nouvel_attribut_json', newJsonString)
+
+    // Transférer le flow file au prochain processeur
+    session.transfer(flowFile, REL_SUCCESS)
+} catch (Exception e) {
+    // Gérer les exceptions en cas d'erreur
+    log.error("Erreur lors du traitement de l'attribut JSON : ${e.message}")
+    session.transfer(flowFile, REL_FAILURE)
+}
