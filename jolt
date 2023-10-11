@@ -1,34 +1,41 @@
 import groovy.json.JsonSlurper
-import groovy.json.JsonOutput
-
-// Accédez à l'attribut JSON
-def jsonAttribute = flowFile.getAttribute('votre_attribut_json')
-
-// Accédez au contenu JSON du FlowFile
-def flowFileContent = IOUtils.toString(flowFile.read(), 'UTF-8')
 
 try {
-    // Parsez l'attribut JSON en un objet Groovy
-    def jsonAttributeObject = new JsonSlurper().parseText(jsonAttribute)
+    // Accédez au contenu du FlowFile
+    def flowFileText = IOUtils.toString(flowFile, 'UTF-8')
 
-    // Parsez le contenu JSON du FlowFile en un objet Groovy
-    def flowFileObject = new JsonSlurper().parseText(flowFileContent)
+    // Analysez le contenu JSON
+    def jsonSlurper = new JsonSlurper()
+    def jsonArray = jsonSlurper.parseText(flowFileText)
 
-    // Fusionnez les deux objets JSON
-    flowFileObject.putAll(jsonAttributeObject)
+    // Créez des ensembles pour stocker les ID doublons et non-doublons
+    def idSet = []
+    def duplicateIdSet = []
 
-    // Convertissez l'objet fusionné en une chaîne JSON
-    def mergedJsonString = JsonOutput.toJson(flowFileObject)
+    // Parcourez le tableau JSON pour identifier les doublons
+    jsonArray.each { jsonObj ->
+        def id = jsonObj.id
+        if (idSet.contains(id)) {
+            duplicateIdSet.add(id)
+        } else {
+            idSet.add(id)
+        }
+    }
 
-    // Mettez à jour le contenu du FlowFile avec la nouvelle chaîne JSON fusionnée
-    flowFile = session.write(flowFile, { outputStream ->
-        outputStream.write(mergedJsonString.getBytes('UTF-8'))
-    } as OutputStreamCallback)
+    // Créez un attribut pour les doublons séparés par des barres verticales
+    def duplicateIdAttribute = duplicateIdSet.join('|')
+    if (duplicateIdAttribute) {
+        flowFile = session.putAttribute(flowFile, 'doublons_id', duplicateIdAttribute)
+    } else {
+        flowFile = session.putAttribute(flowFile, 'non_doublons', 'true')
+    }
 
     // Transférez le FlowFile au prochain processeur
     session.transfer(flowFile, REL_SUCCESS)
 } catch (Exception e) {
-    // Gérez les exceptions en cas d'erreur
-    log.error("Erreur lors de la fusion de l'attribut JSON : ${e.message}")
+    // Gérer l'exception en cas d'erreur
+    log.error("Erreur lors du traitement : ${e.message}")
+
+    // Transférer le FlowFile vers une relation d'erreur
     session.transfer(flowFile, REL_FAILURE)
 }
