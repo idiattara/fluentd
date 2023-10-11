@@ -27,5 +27,4 @@ password : Votre mot de passe Ranger
 
 ## Utilisation
 
-Utilisation
 python suppression_politiques.py topic_todelete.txt
