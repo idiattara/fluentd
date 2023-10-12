@@ -1,32 +1,27 @@
-# Kafka Producer Script
+Ce script Python est conçu pour mettre à jour un processor spécifique dans Apache NiFi. Il est principalement utilisé pour configurer un processor "PutElasticsearchHttpRecord" pour envoyer des données vers Elasticsearch. Le script lit un fichier XML représentant le flux NiFi, recherche le processor à mettre à jour, effectue les modifications nécessaires dans sa configuration, et redémarre le processor.
 
-Ce script Python est un exemple de producteur Kafka qui envoie des messages JSON à un topic Kafka. Il utilise la bibliothèque Kafka Python.
 
-## Configuration Kafka
+Configuration
+Assurez-vous que les variables d'environnement suivantes sont configurées avant d'exécuter le script :
 
-Avant d'exécuter ce script, assurez-vous de configurer correctement les paramètres Kafka suivants dans le script :
+nifi_user : Nom d'utilisateur pour se connecter à NiFi.
+nifi_password : Mot de passe de l'utilisateur NiFi.
+NIFI_HOST : URL du serveur NiFi.
+Assurez-vous également de disposer d'un fichier "pipeline.txt" qui contient la liste des noms de groupes de processus à traiter.
 
-- `kafka_bootstrap_servers` : Les adresses des brokers Kafka.
 
-- `kafka_topic` : Le nom du topic Kafka sur lequel vous souhaitez envoyer des messages.
+Fonctionnement
+Le script lit le fichier "pipeline.txt" pour obtenir la liste des noms de groupes de processus à traiter.
 
-- `kafka_cafile`, `kafka_certfile`, `kafka_keyfile` : Les chemins vers les fichiers de certificats SSL pour la communication sécurisée avec le cluster Kafka.
+Il recherche le processor "PutElasticsearchHttpRecord" dans le flux NiFi.
 
-- `kafka_acks` : La politique d'attente d'accusé de réception (acks) pour la confirmation de la réception du message par le broker. La valeur -1 signifie "all" (attente d'une confirmation de tous les brokers).
+Pour chaque processor trouvé, le script effectue les étapes suivantes :
 
-## Fonctionnalités
+Vérifie si le processor est déjà mis à jour, enregistrant l'ID du processor dans "done.txt".
+Vérifie si le group de processus du processor est dans la liste de groupes autorisés, sinon, le script passe au processor suivant.
+Vérifie si le cluster NiFi est sain.
+Met à jour la configuration du processor avec les paramètres Elasticsearch.
+Redémarre le processor.
+Le script enregistre les erreurs dans "error.txt" et les processors ignorés dans "not_treated.txt".
 
-- Le script envoie périodiquement des messages JSON au topic Kafka spécifié.
-
-- Les messages JSON contiennent un horodatage, un message "Hello, world!" et un compteur.
-
-- Les logs sont enregistrés dans le fichier `kafka_logs.log`.
-
-## Utilisation
-
-1. Assurez-vous d'avoir correctement configuré les paramètres Kafka dans le script.
-
-2. Exécutez le script Python :
-
-   ```bash
-   python kafka_producer.py
+Le journal d'exécution est enregistré dans "execution.log".
