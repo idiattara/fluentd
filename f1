@@ -1,27 +1,52 @@
-Ce script Python est conçu pour mettre à jour un processor spécifique dans Apache NiFi. Il est principalement utilisé pour configurer un processor "PutElasticsearchHttpRecord" pour envoyer des données vers Elasticsearch. Le script lit un fichier XML représentant le flux NiFi, recherche le processor à mettre à jour, effectue les modifications nécessaires dans sa configuration, et redémarre le processor.
+# Update Parameters for PutElasticsearchHttpRecord
 
+The script **change_elastic_param.py** is designed to update a specific processor in Apache NiFi. It is primarily used to configure a "PutElasticsearchHttpRecord" processor. The script reads an XML file (***flow.xml***) representing the NiFi flow, searches for the processor to update, makes the necessary changes in its configuration, and restarts the processor.
 
-Configuration
-Assurez-vous que les variables d'environnement suivantes sont configurées avant d'exécuter le script :
+## Configuration for change_elastic_param.py
 
-nifi_user : Nom d'utilisateur pour se connecter à NiFi.
-nifi_password : Mot de passe de l'utilisateur NiFi.
-NIFI_HOST : URL du serveur NiFi.
-Assurez-vous également de disposer d'un fichier "pipeline.txt" qui contient la liste des noms de groupes de processus à traiter.
+Make sure the following environment variables are configured before running the script:
 
+- **nifi_user**: User name for connecting to NiFi.
+- **nifi_password**: NiFi user's password.
+- **NIFI_HOST**: NiFi server's URL.
+Also, ensure you have a "pipeline.txt" file that contains the list of process group names to be processed.
 
-Fonctionnement
-Le script lit le fichier "pipeline.txt" pour obtenir la liste des noms de groupes de processus à traiter.
+## Operation of change_elastic_param.py
+- The script reads the "pipeline.txt" file to obtain the list of process group names to be processed.
+- It searches for the "PutElasticsearchHttpRecord" processor in the NiFi flow.
+- For each processor found, the script performs the following steps:
+- Checks if the processor is already updated, recording the processor's ID in "done.txt".
+- Checks if the processor's process group is in the list of authorized groups; otherwise, the script moves on to the next processor.
+- Checks if the NiFi cluster is healthy.
+- Updates the processor's configuration with Elasticsearch parameters.
+- Restarts the processor.
+- The script logs errors in "error.txt" and ignored processors in "not_treated.txt."
 
-Il recherche le processor "PutElasticsearchHttpRecord" dans le flux NiFi.
+## Usage of change_elastic_param.py
 
-Pour chaque processor trouvé, le script effectue les étapes suivantes :
+   ```bash  python change_elastic_param.py flow.xml   ```
 
-Vérifie si le processor est déjà mis à jour, enregistrant l'ID du processor dans "done.txt".
-Vérifie si le group de processus du processor est dans la liste de groupes autorisés, sinon, le script passe au processor suivant.
-Vérifie si le cluster NiFi est sain.
-Met à jour la configuration du processor avec les paramètres Elasticsearch.
-Redémarre le processor.
-Le script enregistre les erreurs dans "error.txt" et les processors ignorés dans "not_treated.txt".
+# Update Parameters for update_flow_to_dlq.py
 
-Le journal d'exécution est enregistré dans "execution.log".
+The script **update_flow_to_dlq.py** is designed to update a specific flow in Apache NiFi. It is primarily used to configure flows that contain a "PutHDFS" processor. The script reads an XML file (***flow.xml***) representing the NiFi flow, searches for the flows to update, makes the necessary changes in their configuration, and restarts the processor.
+
+## Operation of update_flow_to_dlq.py
+The script reads the "pipeline.txt" file to obtain the list of process group names to be processed.
+
+It searches for the "PutHDFS" processor in the NiFi flow.
+
+For each processor found, the script performs the following steps:
+
+- Checks if the processor is already updated, recording the processor's ID in "done.txt".
+- Checks if the processor's process group is in the list of authorized groups; otherwise, the script moves on to the next processor.
+- Checks if the NiFi cluster is healthy.
+- Stops the flow and changes the merge configuration to force data ingestion.
+- Instantiates a predefined NiFi template.
+- Updates the template's configuration based on the flow parameters you want to update.
+- Restarts the processor.
+- Removes the old flow.
+- The script logs errors in "error.txt" and ignored processors in "not_treated.txt."
+
+## Usage of update_flow_to_dlq.py
+
+   ```bash  python update_flow_to_dlq.py flow.xml   ```
