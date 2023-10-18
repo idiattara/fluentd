@@ -1,20 +1,27 @@
-GET your_index/_search
-{
-  "size": 0,
-  "aggs": {
-    "duplicate_timestamps": {
-      "terms": {
-        "field": "timestamp.keyword",
-        "min_doc_count": 2,  
-        "size": 10
-      },
-      "aggs": {
-        "duplicates": {
-          "top_hits": {
-            "size": 10
-          }
-        }
-      }
-    }
-  }
+import groovy.json.JsonSlurper
+
+def flowFile = session.get()
+if (!flowFile) return
+
+try {
+    // Lire le contenu JSON du FlowFile
+    def flowFileContent = flowFile.read().withReader { reader -> new JsonSlurper().parse(reader) }
+
+    // Spécifiez le nom de l'attribut dans lequel vous souhaitez stocker le contenu JSON
+    def attributeName = "mon_attribut"
+
+    // Convertir le contenu JSON en une chaîne JSON
+    def jsonAsString = new JsonBuilder(flowFileContent).toString()
+
+    // Ajouter le contenu JSON dans l'attribut spécifié
+    flowFile = session.putAttribute(flowFile, attributeName, jsonAsString)
+
+    // Transférer le FlowFile modifié
+    session.transfer(flowFile, REL_SUCCESS)
+} catch (Exception e) {
+    // Gérer l'exception ici, par exemple, en transférant le FlowFile vers une relation d'échec
+    session.transfer(flowFile, REL_FAILURE)
+
+    // Vous pouvez également journaliser l'exception pour le débogage
+    log.error("Une exception s'est produite : ${e.message}")
 }
