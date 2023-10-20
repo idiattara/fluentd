@@ -1,27 +1,13 @@
-import groovy.json.JsonSlurper
-
-def flowFile = session.get()
-if (!flowFile) return
-
-try {
-    // Lire le contenu JSON du FlowFile
-    def flowFileContent = flowFile.read().withReader { reader -> new JsonSlurper().parse(reader) }
-
-    // Spécifiez le nom de l'attribut dans lequel vous souhaitez stocker le contenu JSON
-    def attributeName = "mon_attribut"
-
-    // Convertir le contenu JSON en une chaîne JSON
-    def jsonAsString = new JsonBuilder(flowFileContent).toString()
-
-    // Ajouter le contenu JSON dans l'attribut spécifié
-    flowFile = session.putAttribute(flowFile, attributeName, jsonAsString)
-
-    // Transférer le FlowFile modifié
-    session.transfer(flowFile, REL_SUCCESS)
-} catch (Exception e) {
-    // Gérer l'exception ici, par exemple, en transférant le FlowFile vers une relation d'échec
-    session.transfer(flowFile, REL_FAILURE)
-
-    // Vous pouvez également journaliser l'exception pour le débogage
-    log.error("Une exception s'est produite : ${e.message}")
-}
+.withColumn('Skincare_DayNight_text', expr("""case when globalcategory=1137081494 then
+    case when Skincare_DayNight_text in ("SKIN MAKE LINE","NON FRANCHISE LINE", "NICHE BRANDS","RETAILER PRIVATE LABEL",""," ") or itemnumber=1139017029 then 'ALL OTHER' else coalesce(Skincare_DayNight_text,' ') end 
+    else ' ' end"""))\
+# .withColumn('Alphabet_Creams_text', expr("""case when globalcategory=1137081494 then
+#     case when Alphabet_Creams_text in ("SKIN MAKE LINE","NON FRANCHISE LINE", "NICHE BRANDS","RETAILER PRIVATE LABEL",""," ") or itemnumber=1139017029 then
+#     'ALL OTHER' else coalesce(Alphabet_Creams_text,' ') end
+#     else ' ' end"""))\
+.withColumn('DayNight_Cream_text', expr("""case when globalcategory=1137081494 then
+    case when DayNight_Cream_text in ("SKIN MAKE LINE","NON FRANCHISE LINE", "NICHE BRANDS","RETAILER PRIVATE LABEL",""," ") or itemnumber=1139017029 then 'ALL OTHER' else coalesce(DayNight_Cream_text,' ') end 
+    else ' ' end"""))\
+.withColumn('Skincare_Brightening_text', expr("""case when globalcategory=1137081494 then
+    case when Skincare_Brightening_text in ("SKIN MAKE LINE","NON FRANCHISE LINE", "NICHE BRANDS","RETAILER PRIVATE LABEL",""," ") or itemnumber=1139017029 then 'ALL OTHER' else coalesce(Skincare_Brightening_text,' ') end 
+    else ' ' end"""))
