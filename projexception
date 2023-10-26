@@ -1,0 +1,37 @@
+import pyproj
+import sys
+
+def transform_coordinates(source_epsg, dest_epsg, input_coords):
+    try:
+        # Define source and destination coordinate systems
+        source_crs = pyproj.CRS(source_epsg)
+        dest_crs = pyproj.CRS(dest_epsg)
+
+        # Create a transformer
+        transformer = pyproj.Transformer.from_crs(source_crs, dest_crs, always_xy=True)
+
+        # Perform the coordinate transformation
+        output_coords = transformer.transform(*input_coords)
+
+        # Print the transformed coordinates
+        formatted_output = " ".join(format(coord, ".6f") for coord in output_coords)
+        print("Transformed coordinates:", formatted_output)
+
+    except pyproj.exceptions.CRSError as e:
+        print("Error: Coordinate transformation failed.")
+        print("Error message:", e)
+
+    except Exception as e:
+        print("An unexpected error occurred.")
+        print("Error message:", e)
+
+if __name__ == "__main__":
+    if len(sys.argv) != 6:
+        print("Usage: python coordinate_transform.py <source_epsg> <dest_epsg> <lon> <lat> <elevation>")
+        sys.exit(1)
+
+    source_epsg = sys.argv[1]
+    dest_epsg = sys.argv[2]
+    input_coords = [float(sys.argv[3]), float(sys.argv[4]), float(sys.argv[5])]
+
+    transform_coordinates(source_epsg, dest_epsg, input_coords)
