@@ -1,3 +1,9 @@
-Pour pouvoir utiliser la librairie, nous avons deux scripts : un codé en Python (projection.py) et un autre en Bash (projection_python.sh). Le Bash est utilisé pour exécuter le code Python dans Nifi en utilisant le processeur ExecuteStreamCommand.
+Connectez-vous à l'interface NIFI 
 
-Pour tester l'installation et les scripts, il suffit de lancer la commande suivante :
+Accédez à la section "Templates" dans le panneau de gauche.
+
+Cliquez sur "Upload Template" pour importer un modèle.
+
+Sélectionnez le fichier de modèle depuis votre système de fichiers local.
+
+Cliquez sur "Upload" pour importer le modèle
