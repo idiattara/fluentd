@@ -1,9 +1,1 @@
-Connectez-vous à l'interface NIFI 
-
-Accédez à la section "Templates" dans le panneau de gauche.
-
-Cliquez sur "Upload Template" pour importer un modèle.
-
-Sélectionnez le fichier de modèle depuis votre système de fichiers local.
-
-Cliquez sur "Upload" pour importer le modèle
+wget  https://cdn.jsdelivr.net/npm/mathjs@10.0.1/lib/browser/math.min.js
