@@ -1,1 +1,10 @@
 wget  https://cdn.jsdelivr.net/npm/mathjs@10.0.1/lib/browser/math.min.js
+Bonjour Emmanuel,
+
+En ce qui concerne l'utilisation de la bibliothèque math.min.js jointe, 
+nous avons constaté qu'elle fonctionne en environnement de développement (dev), mais pas en environnement de qualification (qualif). Nous avons identifié la cause principale : le Kit JDK embarqué en environnement de développement contient un interpréteur Nashorn (jjs) qui est un moteur JavaScript permettant d'interpréter du code JavaScript. Cependant, l'environnement de qualification ne contient pas jjs.
+
+Attention ! Le jjs n'est présent que dans les versions récentes de Java. Par conséquent, pour pouvoir utiliser la bibliothèque math.min.js, il sera nécessaire d'installer Node.js sur toutes les machines de l'environnement de qualification et de production.
+
+Cordialement,
+[Votre nom]
