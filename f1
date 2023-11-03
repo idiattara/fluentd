@@ -1,10 +1,19 @@
-wget  https://cdn.jsdelivr.net/npm/mathjs@10.0.1/lib/browser/math.min.js
-Bonjour Emmanuel,
+#!/bin/bash
 
-En ce qui concerne l'utilisation de la bibliothèque math.min.js jointe, 
-nous avons constaté qu'elle fonctionne en environnement de développement (dev), mais pas en environnement de qualification (qualif). Nous avons identifié la cause principale : le Kit JDK embarqué en environnement de développement contient un interpréteur Nashorn (jjs) qui est un moteur JavaScript permettant d'interpréter du code JavaScript. Cependant, l'environnement de qualification ne contient pas jjs.
+# Vérifiez si un seul argument a été fourni
+if [ $# -ne 1 ]; then
+    exit 1
+fi
 
-Attention ! Le jjs n'est présent que dans les versions récentes de Java. Par conséquent, pour pouvoir utiliser la bibliothèque math.min.js, il sera nécessaire d'installer Node.js sur toutes les machines de l'environnement de qualification et de production.
+# Récupérez l'argument de la ligne de commande
+conversion="$1"
 
-Cordialement,
-[Votre nom]
+# Utilisez awk pour extraire la valeur, l'unité de base et l'unité cible
+value=$(echo "$conversion" | awk '{print $1}')
+unit_base=$(echo "$conversion" | awk '{print $2}')
+unit_target=$(echo "$conversion" | awk '{print $4}')
+
+# Utilisez la commande "units" pour effectuer la conversion et stockez la sortie dans une variable
+result=$(units "$value$unit_base" "$unit_target")
+# Utilisez awk pour extraire la valeur numérique
+numeric_result=$(echo "$result" | awk 'NR==1{print $2}')
