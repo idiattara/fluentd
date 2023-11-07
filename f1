@@ -1,1 +1,27 @@
-(\r\n|\r|\n)
+import requests
+import json
+
+# Define the URL and JSON data
+url = "http://localhost:8011/list"
+data = {"nom": "diattara"}
+
+# Convert the data to JSON
+json_data = json.dumps(data)
+
+# Set the headers for the request
+headers = {'Content-Type': 'application/json'}
+
+try:
+    # Send the POST request
+    response = requests.post(url, data=json_data, headers=headers)
+
+    # Check the response status
+    if response.status_code == 200:
+        print("Request was successful.")
+        print("Response:", response.text)
+    else:
+        print(f"Request failed with status code {response.status_code}.")
+except requests.exceptions.RequestException as e:
+    print(f"Request failed with the following error: {e}")
+except Exception as e:
+    print(f"An unexpected error occurred: {e}")
