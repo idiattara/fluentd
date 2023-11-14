@@ -1,3 +1,9 @@
+Nous avons effectué des tests d'installation de pyproj, units, et Node.js sur l'environnement de qualification. Cependant, pour pyproj et Node.js, nous avons obtenu le message d'erreur "commande introuvable".
+
+Le cluster utilise un utilisateur appelé "nifi". Si l'installation a été réalisée avec succès, veuillez vérifier si l'utilisateur "nifi" a les droits nécessaires pour utiliser ces deux packages (pyproj et Node.js
+
+
+
 import requests
 import json
 
