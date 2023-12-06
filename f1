@@ -1,0 +1,40 @@
+import org.apache.nifi.processor.io.StreamCallback
+import org.neo4j.driver.internal.value.NodeValue
+import org.neo4j.driver.v1.*
+
+flowFile = session.get()
+if (flowFile != null) {
+    def cypherQuery = "MATCH (n) RETURN n LIMIT 10"  // Remplacez cette requête par la vôtre
+
+    def neo4jUri = "bolt://localhost:7687"  // Remplacez par l'URI de votre serveur Neo4j
+    def neo4jUser = "your_username"         // Remplacez par votre nom d'utilisateur Neo4j
+    def neo4jPassword = "your_password"     // Remplacez par votre mot de passe Neo4j
+
+    def driver = GraphDatabase.driver(neo4jUri, AuthTokens.basic(neo4jUser, neo4jPassword))
+    def session = driver.session()
+
+    def result = session.readTransaction(new TransactionWork<List<NodeValue>>() {
+        @Override
+        List<NodeValue> execute(Transaction tx) {
+            def values = []
+            def statementResult = tx.run(cypherQuery)
+            while (statementResult.hasNext()) {
+                def record = statementResult.next()
+                def node = record.get("n")
+                values.add(new NodeValue(node))
+            }
+            return values
+        }
+    })
+
+    session.close()
+    driver.close()
+
+    // Traitez les résultats comme nécessaire, par exemple, convertissez-les en texte et attachez-les au flux NiFi
+    def resultText = result.collect { it.toString() }.join('\n')
+    flowFile = session.write(flowFile, { outputStream ->
+        outputStream.write(resultText.getBytes('UTF-8'))
+    } as StreamCallback)
+
+    // Transférez le fichier au prochain processeur
+    session.transfer(flowFile, REL_SUCCESS)
