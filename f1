@@ -1,4 +1,20 @@
-SELECT
-  FLD1.`row`.FLD2.LINE_NUMBER AS LINE_NUMBER
-FROM
-  FLOWFILE FLD1
+[
+  {
+    "operation": "shift",
+    "spec": {
+      "results": {
+        "*": {
+          "data": {
+            "*": {
+              "row": {
+                "*": {
+                  "*": "&"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+]
