@@ -7,7 +7,13 @@
           "data": {
             "*": {
               "row": {
-                "*": "&"
+                "*": {
+                  "@(2,TYPE_OUVRAGE)": "[&3].TYPE_OUVRAGE",
+                  "@(2,TYPE_RAPPORT)": "[&3].TYPE_RAPPORT",
+                  "@(2,MODE)": "[&3].MODE",
+                  "@(2,ENTREPRISE)": "[&3].ENTREPRISE",
+                  "@(2,LINE_NUMBER)": "[&3].LINE_NUMBER"
+                }
               }
             }
           }
@@ -18,10 +24,7 @@
   {
     "operation": "shift",
     "spec": {
-      "*": "[]"
+      "*": ""
     }
-  },
-  {
-    "operation": "merge"
   }
 ]
