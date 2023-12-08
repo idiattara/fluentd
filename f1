@@ -20,7 +20,10 @@
   {
     "operation": "shift",
     "spec": {
-      "*": "&"
+      "*": "[]"
     }
+  },
+  {
+    "operation": "merge"
   }
 ]
