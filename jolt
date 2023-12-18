@@ -1,41 +1,33 @@
-import groovy.json.JsonSlurper
-
-try {
-    // Accédez au contenu du FlowFile
-    def flowFileText = IOUtils.toString(flowFile, 'UTF-8')
-
-    // Analysez le contenu JSON
-    def jsonSlurper = new JsonSlurper()
-    def jsonArray = jsonSlurper.parseText(flowFileText)
-
-    // Créez des ensembles pour stocker les ID doublons et non-doublons
-    def idSet = []
-    def duplicateIdSet = []
-
-    // Parcourez le tableau JSON pour identifier les doublons
-    jsonArray.each { jsonObj ->
-        def id = jsonObj.id
-        if (idSet.contains(id)) {
-            duplicateIdSet.add(id)
-        } else {
-            idSet.add(id)
+[
+  {
+    "operation": "shift",
+    "spec": {
+      "*": {
+        "row": {
+          "*": {
+            "*": {
+              // Si la valeur est un tableau, itère dessus
+              "@(3)": "[#3].&",
+              // Si la valeur n'est pas un tableau, convertissez-la en chaîne
+              "*": "[#2].&"
+            }
+          }
         }
+      }
     }
-
-    // Créez un attribut pour les doublons séparés par des barres verticales
-    def duplicateIdAttribute = duplicateIdSet.join('|')
-    if (duplicateIdAttribute) {
-        flowFile = session.putAttribute(flowFile, 'doublons_id', duplicateIdAttribute)
-    } else {
-        flowFile = session.putAttribute(flowFile, 'non_doublons', 'true')
+  },
+  {
+    "operation": "cardinality",
+    "spec": {
+      "*": "MANY"
     }
-
-    // Transférez le FlowFile au prochain processeur
-    session.transfer(flowFile, REL_SUCCESS)
-} catch (Exception e) {
-    // Gérer l'exception en cas d'erreur
-    log.error("Erreur lors du traitement : ${e.message}")
-
-    // Transférer le FlowFile vers une relation d'erreur
-    session.transfer(flowFile, REL_FAILURE)
-}
+  },
+  {
+    "operation": "shift",
+    "spec": {
+      "*": {
+        "*": "[#2].&"
+      }
+    }
+  }
+]
