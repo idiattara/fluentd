@@ -1,0 +1,39 @@
+[
+  {
+    "operation": "shift",
+    "spec": {
+      "data": {
+        "*": {
+          "row": {
+            "*": {
+              "*": "[#2].&"
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "operation": "cardinality",
+    "spec": {
+      "*": "MANY"
+    }
+  },
+  {
+    "operation": "shift",
+    "spec": {
+      "*": {
+        "*": "[#2].&"
+      }
+    }
+  },
+  {
+    "operation": "shift",
+    "spec": {
+      "*": {
+        "*": "[#2].&",
+        "@(2)": "[#2].&"
+      }
+    }
+  }
+]
