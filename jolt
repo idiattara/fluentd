@@ -3,30 +3,23 @@
     "operation": "shift",
     "spec": {
       "*": {
-        "row": {
+        "columns": {
           "*": {
-            "*": {
-              // Si la valeur est un tableau, itère dessus
-              "@(3)": "[#3].&",
-              // Si la valeur n'est pas un tableau, convertissez-la en chaîne
-              "*": "[#2].&"
-            }
+            "@(1,data)": "[#2].&"
           }
         }
       }
     }
   },
   {
-    "operation": "cardinality",
-    "spec": {
-      "*": "MANY"
-    }
-  },
-  {
     "operation": "shift",
     "spec": {
       "*": {
-        "*": "[#2].&"
+        "data": {
+          "*": {
+            "row": "[#2].&"
+          }
+        }
       }
     }
   }
