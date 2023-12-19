@@ -1,26 +1,9 @@
-[
-  {
-    "operation": "shift",
-    "spec": {
-      "results": {
-        "*": {
-          "data": {
-            "*": {
-              "row": {
-                "*": {
-                  "*": "[]"
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  },
-  {
-    "operation": "shift",
-    "spec": {
-      "*": ""
-    }
-  }
-]
+Les différentes étapes du flux UC6 sont les suivantes :
+
+Étape 1 : Nous avons utilisé le processeur ListSFP pour détecter la présence d'un nouveau fichier dans le répertoire /Rep/EDF.
+
+Étape 2 : Un filtre est appliqué pour récupérer uniquement les fichiers d'extension .msd qui se trouvent dans les répertoires suivants :
+
+RAN1
+RAN2
+Étape 3 : Après avoir appliqué le filtre, nous utilisons le processeur FetchSFTP pour récupérer les fichiers et les déposer dans le répertoire /tmp/test du serveur NiFi
