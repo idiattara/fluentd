@@ -1,9 +1,36 @@
-Les différentes étapes du flux UC6 sont les suivantes :
+import groovy.json.JsonSlurper
 
-Étape 1 : Nous avons utilisé le processeur ListSFP pour détecter la présence d'un nouveau fichier dans le répertoire /Rep/EDF.
+def flowFile = session.get()
+if (!flowFile) {
+    return
+}
 
-Étape 2 : Un filtre est appliqué pour récupérer uniquement les fichiers d'extension .msd qui se trouvent dans les répertoires suivants :
+try {
+    // Lecture du contenu du FlowFile
+    def flowFileContent = session.read(flowFile).getText('UTF-8')
 
-RAN1
-RAN2
-Étape 3 : Après avoir appliqué le filtre, nous utilisons le processeur FetchSFTP pour récupérer les fichiers et les déposer dans le répertoire /tmp/test du serveur NiFi
+    // Utilisation de JsonSlurper pour traiter le contenu MSD (assurez-vous que votre format est compatible)
+    def slurper = new JsonSlurper()
+    def msdData = slurper.parseText(flowFileContent)
+
+    // Extraction des attributs
+    def network = msdData.network
+    def station = msdData.station
+    def location = msdData.location
+
+    // Log des attributs extraits
+    log.info("Network: $network, Station: $station, Location: $location")
+
+    // Ajout des attributs en tant qu'attributs de flux
+    flowFile = session.putAttribute(flowFile, 'network', network)
+    flowFile = session.putAttribute(flowFile, 'station', station)
+    flowFile = session.putAttribute(flowFile, 'location', location)
+
+    // Transfert du FlowFile au prochain processeur
+    session.transfer(flowFile, REL_SUCCESS)
+
+} catch (Exception e) {
+    // En cas d'exception, enregistrer l'erreur et transférer le FlowFile vers la relation d'échec
+    log.error("Erreur lors du traitement du FlowFile: ${e.message}")
+    session.transfer(flowFile, REL_FAILURE)
+}
