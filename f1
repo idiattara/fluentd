@@ -1,33 +1,41 @@
-import org.apache.commons.io.IOUtils
-import org.apache.nifi.processor.io.StreamCallback
-import org.apache.nifi.flowfile.attributes.CoreAttributes
+from org.apache.commons.io import IOUtils
+from java.nio.charset import StandardCharsets
+from org.apache.nifi.processor.io import StreamCallback
+from obspy import read
 
-def flowFile = session.get()
-if (!flowFile) return
+flowFile = session.get()
+if flowFile is None:
+    exit()
 
-try {
-    session.read(flowFile, { inputStream ->
-        def flowfile_content = IOUtils.toString(inputStream, StandardCharsets.UTF_8)
-        def sourceFile = new ObsPy().read(flowfile_content)
+try:
+    # Lecture du contenu du FlowFile
+    flowfile_content = IOUtils.toString(session.read(flowFile).inputStream, StandardCharsets.UTF_8)
+    
+    # Analyse avec ObsPy
+    sourceFile = read(flowfile_content)
+    
+    # Extraire les informations nécessaires
+    network = sourceFile[0].stats.network
+    station = sourceFile[0].stats.station
+    location = sourceFile[0].stats.location
+    channel = sourceFile[0].stats.channel
+    timing = sourceFile[0].stats.starttime.strftime("%Y%m%d_%H%M%S")
 
-        def network = sourceFile[0].stats.network
-        def station = sourceFile[0].stats.station
-        def location = sourceFile[0].stats.location
-        def channel = sourceFile[0].stats.channel
-        def timing = sourceFile[0].stats.starttime.strftime("%Y%m%d_%H%M%S")
+    # Modifier les valeurs si nécessaire
+    if network == 'RA' and station == 'NAG1' and channel[0:2] == 'HH':
+        network = 'EF'
+        location = '01'
 
-        if (network == 'RA' && station == 'NAG1' && channel[0..1] == 'HH') {
-            network = 'EF'
-            location = '01'
-        }
+    # Construire le résultat
+    resultat = f"{network}.{station}.{location}.{channel}.{timing}.mseed"
 
-        def resultat = "${network}.${station}.${location}.${channel}.${timing}.mseed"
-        flowFile = session.putAttribute(flowFile, 'resultat', resultat)
-    } as StreamCallback)
+    # Ajouter le résultat en tant qu'attribut au FlowFile
+    flowFile = session.putAttribute(flowFile, "resultat", resultat)
 
+    # Écrire le FlowFile modifié dans le flux
     session.transfer(flowFile, REL_SUCCESS)
-} catch (Exception e) {
-    // Gérer l'exception, imprimer la trace ou effectuer d'autres actions nécessaires
-    log.error("Une erreur s'est produite lors du traitement du FlowFile: {}", e.toString())
+
+except Exception as e:
+    # En cas d'erreur, imprimer la trace et transférer vers la relation d'échec
+    traceback.print_exc()
     session.transfer(flowFile, REL_FAILURE)
-}
