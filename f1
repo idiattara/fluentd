@@ -1,19 +1,23 @@
-from org.apache.commons.io import IOUtils
 from java.nio.charset import StandardCharsets
 from org.apache.nifi.processor.io import StreamCallback
 from obspy import read
+import traceback
 
 flowFile = session.get()
 if flowFile is None:
     exit()
 
 try:
-    # Lecture du contenu du FlowFile
-    flowfile_content = IOUtils.toString(session.read(flowFile).inputStream, StandardCharsets.UTF_8)
-    
+    # Lecture du contenu du FlowFile en utilisant un StreamCallback
+    def stream_callback(inputStream):
+        content = IOUtils.toString(inputStream, StandardCharsets.UTF_8)
+        return content
+
+    content = session.read(flowFile, stream_callback)
+
     # Analyse avec ObsPy
-    sourceFile = read(flowfile_content)
-    
+    sourceFile = read(content)
+
     # Extraire les informations nécessaires
     network = sourceFile[0].stats.network
     station = sourceFile[0].stats.station
@@ -32,7 +36,7 @@ try:
     # Ajouter le résultat en tant qu'attribut au FlowFile
     flowFile = session.putAttribute(flowFile, "resultat", resultat)
 
-    # Écrire le FlowFile modifié dans le flux
+    # Transférer vers la relation de succès
     session.transfer(flowFile, REL_SUCCESS)
 
 except Exception as e:
