@@ -1,36 +1,33 @@
-import groovy.json.JsonSlurper
+import org.apache.commons.io.IOUtils
+import org.apache.nifi.processor.io.StreamCallback
+import org.apache.nifi.flowfile.attributes.CoreAttributes
 
 def flowFile = session.get()
-if (!flowFile) {
-    return
-}
+if (!flowFile) return
 
 try {
-    // Lecture du contenu du FlowFile
-    def flowFileContent = session.read(flowFile).getText('UTF-8')
+    session.read(flowFile, { inputStream ->
+        def flowfile_content = IOUtils.toString(inputStream, StandardCharsets.UTF_8)
+        def sourceFile = new ObsPy().read(flowfile_content)
 
-    // Utilisation de JsonSlurper pour traiter le contenu MSD (assurez-vous que votre format est compatible)
-    def slurper = new JsonSlurper()
-    def msdData = slurper.parseText(flowFileContent)
+        def network = sourceFile[0].stats.network
+        def station = sourceFile[0].stats.station
+        def location = sourceFile[0].stats.location
+        def channel = sourceFile[0].stats.channel
+        def timing = sourceFile[0].stats.starttime.strftime("%Y%m%d_%H%M%S")
 
-    // Extraction des attributs
-    def network = msdData.network
-    def station = msdData.station
-    def location = msdData.location
+        if (network == 'RA' && station == 'NAG1' && channel[0..1] == 'HH') {
+            network = 'EF'
+            location = '01'
+        }
 
-    // Log des attributs extraits
-    log.info("Network: $network, Station: $station, Location: $location")
+        def resultat = "${network}.${station}.${location}.${channel}.${timing}.mseed"
+        flowFile = session.putAttribute(flowFile, 'resultat', resultat)
+    } as StreamCallback)
 
-    // Ajout des attributs en tant qu'attributs de flux
-    flowFile = session.putAttribute(flowFile, 'network', network)
-    flowFile = session.putAttribute(flowFile, 'station', station)
-    flowFile = session.putAttribute(flowFile, 'location', location)
-
-    // Transfert du FlowFile au prochain processeur
     session.transfer(flowFile, REL_SUCCESS)
-
 } catch (Exception e) {
-    // En cas d'exception, enregistrer l'erreur et transférer le FlowFile vers la relation d'échec
-    log.error("Erreur lors du traitement du FlowFile: ${e.message}")
+    // Gérer l'exception, imprimer la trace ou effectuer d'autres actions nécessaires
+    log.error("Une erreur s'est produite lors du traitement du FlowFile: {}", e.toString())
     session.transfer(flowFile, REL_FAILURE)
 }
