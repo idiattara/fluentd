@@ -1,45 +1,5 @@
-from java.nio.charset import StandardCharsets
-from org.apache.nifi.processor.io import StreamCallback
-from obspy import read
-import traceback
+Quand on a beaucoup de fichiers en état "in progress" ou "Imported" ou "integrated", le web service prend environ plus de 3 minutes avant d'envoyer une réponse à l'IHM. Et l'IHM continue d'envoyer des requêtes pour savoir l'état des fichiers, ce qui fait que l'IHM atteint des "timeouts", et on perd l'affichage dans l'interface Web.
 
-flowFile = session.get()
-if flowFile is None:
-    exit()
+En plus de cela, du côté de NiFi, on consomme beaucoup de ressources car les données seront submergées entre les processeurs et les threads seront libérés une fois que le traitement est terminé, ce qui dégrade les performances du cluster.
 
-try:
-    # Lecture du contenu du FlowFile en utilisant un StreamCallback
-    def stream_callback(inputStream):
-        content = IOUtils.toString(inputStream, StandardCharsets.UTF_8)
-        return content
-
-    content = session.read(flowFile, stream_callback)
-
-    # Analyse avec ObsPy
-    sourceFile = read(content)
-
-    # Extraire les informations nécessaires
-    network = sourceFile[0].stats.network
-    station = sourceFile[0].stats.station
-    location = sourceFile[0].stats.location
-    channel = sourceFile[0].stats.channel
-    timing = sourceFile[0].stats.starttime.strftime("%Y%m%d_%H%M%S")
-
-    # Modifier les valeurs si nécessaire
-    if network == 'RA' and station == 'NAG1' and channel[0:2] == 'HH':
-        network = 'EF'
-        location = '01'
-
-    # Construire le résultat
-    resultat = f"{network}.{station}.{location}.{channel}.{timing}.mseed"
-
-    # Ajouter le résultat en tant qu'attribut au FlowFile
-    flowFile = session.putAttribute(flowFile, "resultat", resultat)
-
-    # Transférer vers la relation de succès
-    session.transfer(flowFile, REL_SUCCESS)
-
-except Exception as e:
-    # En cas d'erreur, imprimer la trace et transférer vers la relation d'échec
-    traceback.print_exc()
-    session.transfer(flowFile, REL_FAILURE)
+D'après les analyses, les goulots d'étranglement se situent au niveau du script Groovy. Il était donc primordial de remplacer ce script Groovy par des "processors" natifs NiFi.
