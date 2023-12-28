@@ -1,5 +1,5 @@
-Quand on a beaucoup de fichiers en état "in progress" ou "Imported" ou "integrated", le web service prend environ plus de 3 minutes avant d'envoyer une réponse à l'IHM. Et l'IHM continue d'envoyer des requêtes pour savoir l'état des fichiers, ce qui fait que l'IHM atteint des "timeouts", et on perd l'affichage dans l'interface Web.
+Si IS_ADMIN=TRUE, nous lançons dans la base de données "teggstatus" la requête suivante : "select * from test". Sinon, nous lançons la requête : "select * from toto".
 
-En plus de cela, du côté de NiFi, on consomme beaucoup de ressources car les données seront submergées entre les processeurs et les threads seront libérés une fois que le traitement est terminé, ce qui dégrade les performances du cluster.
+Pour bien formater les données, nous utilisons un processeur Jolt avec la spécification suivante.
 
-D'après les analyses, les goulots d'étranglement se situent au niveau du script Groovy. Il était donc primordial de remplacer ce script Groovy par des "processors" natifs NiFi.
+Après avoir correctement formaté les données, nous divisons notre JSON de manière à ce que chaque flowfile ne contienne que les métadonnées d'un onglet d'un fichier Excel.
