@@ -1,5 +1,1 @@
-Si IS_ADMIN=TRUE, nous lançons dans la base de données "teggstatus" la requête suivante : "select * from test". Sinon, nous lançons la requête : "select * from toto".
-
-Pour bien formater les données, nous utilisons un processeur Jolt avec la spécification suivante.
-
-Après avoir correctement formaté les données, nous divisons notre JSON de manière à ce que chaque flowfile ne contienne que les métadonnées d'un onglet d'un fichier Excel.
+Ce groupe de processus est utilisé pour préparer la requête qui permet de récupérer le nombre de warnings d'un onglet d'un fichier Excel. Dans un premier temps, nous utilisons un processeur EvaluateJSONPath pour extraire les attributs "campagne" et "utilisateur". Nous utilisons également d'autres processeurs tels que UpdateAttribute et ExtractText pour obtenir la requête suivante que nous lancerons dans la base de données TeggErrors.
