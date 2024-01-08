@@ -4,11 +4,13 @@ import json
 with open('votre_fichier.json', 'r') as fichier_json:
     data = json.load(fichier_json)
 
-# Extraire le contenu de la clé "metadata"
-metadata = data.get('metadata', {})
+# Extraire le contenu de la clé "lines" ou une liste vide si la clé n'est pas présente
+lines = data.get('lines', [])
 
-# Écrire le résultat dans un fichier
-with open('resultat_metadata.txt', 'w') as fichier_resultat:
-    fichier_resultat.write(json.dumps(metadata, indent=2))
+# Écrire chaque élément de "lines" dans un fichier avec une nouvelle ligne pour chaque élément
+with open('resultat_lines.json', 'w') as fichier_resultat:
+    for line in lines:
+        fichier_resultat.write(json.dumps(line))
+        fichier_resultat.write('\n')
 
-print("Le contenu de metadata a été extrait et écrit dans 'resultat_metadata.txt'")
+print("Le contenu de lines a été extrait et écrit dans 'resultat_lines.json'")
