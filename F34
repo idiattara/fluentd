@@ -1,5 +1,14 @@
-e me permets de vous écrire afin de vous informer que nous avons testé l'exécution de la bibliothèque pyproj sur les machines du cluster Nifi de la production, mais nous avons reçu un message d'erreur indiquant "module pyproj introuvable".
+import json
 
-En qualification, pour pouvoir utiliser la bibliothèque pyproj, nous avons exécuté notre script avec la commande python test.py. Cependant, le répertoire wrap/python2 n'existe pas sur la production.
+# Charger le JSON depuis un fichier
+with open('votre_fichier.json', 'r') as fichier_json:
+    data = json.load(fichier_json)
 
-Veuillez créer également le répertoire suivant : /tmpp/TGG sur les trois machines Nifi de la production, car c'est là que nous déposerons les scripts, comme cela a été fait en qualification.
+# Extraire le contenu de la clé "metadata"
+metadata = data.get('metadata', {})
+
+# Écrire le résultat dans un fichier
+with open('resultat_metadata.txt', 'w') as fichier_resultat:
+    fichier_resultat.write(json.dumps(metadata, indent=2))
+
+print("Le contenu de metadata a été extrait et écrit dans 'resultat_metadata.txt'")
