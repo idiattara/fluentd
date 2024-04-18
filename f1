@@ -1,17 +1,23 @@
 import org.apache.spark.sql.SparkSession
-object Test{
+
+object MainTest {
   def main(args: Array[String]) {
-    val csvFile="/opt/test.csv"
-    val spark = SparkSession.builder.appName("SimpleApplication")
-      //.config("spark.master", "local")
-      .getOrCreate()
 
-    val df = spark.read
-      .format("csv")
-      .option("header", "true") // Si le fichier CSV contient un en-tête
-      .load(csvFile)
+    val path = "src\\data\\test.csv"
+    val outputPath = "src\\outdata"
 
-    df.show()
+    val spark: SparkSession = SparkSession.builder().appName("uvs")
+      .master("local[*]").getOrCreate()
+
+    val df = spark.read.option("header", "true").csv(path)
+
+    df.select("nom", "age").write
+      .option("header", "true")
+      .mode("overwrite")
+      .csv(outputPath)
+
+    spark.read.option("header", "true").csv(outputPath).show
+
 
   }
 }
