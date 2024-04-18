@@ -1,8 +1,6 @@
-PUT log_hospital_hospitalname_departmentname_pilinename-000001
-{
-  "aliases": {
-    "log_hospital_hospitalname_departmentname_pilinename": {
-      "is_write_index": true
-    }
-  }
-}
+df.select("nom","age").write
+    .option("header", "true")
+    .mode("overwrite")
+    .csv(outputPath)
+
+  spark.read.option("header","true").csv(outputPath).show
